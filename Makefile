@@ -1,80 +1,95 @@
-ifeq ($(strip $(DEVKITPRO)),)
-$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
-endif
+# Output file name
+BIN_NAME = libnds.a
 
-export TOPDIR	:=	$(CURDIR)
+# Dirs with resources and source code
+GFX_DIR = res/gfx
+FONTS_DIR = res/fonts
+COMMON_SRC_DIR = src
+ARM9_SRC_DIR = src/arm9
 
-export LIBNDS_MAJOR	:= 1
-export LIBNDS_MINOR	:= 8
-export LIBNDS_PATCH	:= 0
+# Find all .c and .s files
+COMMON_SRC_FILES = $(wildcard $(COMMON_SRC_DIR)/*.c) $(wildcard $(COMMON_SRC_DIR)/*.s)
+
+ARM9_SRC_FILES = $(wildcard $(ARM9_SRC_DIR)/*.c) $(wildcard $(ARM9_SRC_DIR)/*.s) \
+				 $(wildcard $(ARM9_SRC_DIR)/system/*.c) $(wildcard $(ARM9_SRC_DIR)/system/*.s) \
+				 $(wildcard $(ARM9_SRC_DIR)/dldi/*.c) $(wildcard $(ARM9_SRC_DIR)/dldi/*.s)
+
+# And all resources
+GFX_FILES = $(wildcard $(GFX_DIR)/*.grit)
+FONT_FILES = $(wildcard $(FONTS_DIR)/*.bin)
 
 
-VERSION	:=	$(LIBNDS_MAJOR).$(LIBNDS_MINOR).$(LIBNDS_PATCH)
+# Toolchain
+CC = arm-none-eabi-gcc
+LD = arm-none-eabi-gcc
+AS = arm-none-eabi-as
+AR = arm-none-eabi-gcc-ar
+BIN2S = bin2s
+GRIT = grit
 
 
-.PHONY: release debug clean all docs
+# Build config
+INCLUDE_DIRS = 	-I$(GFX_DIR) \
+				-I$(FONTS_DIR) \
+				-I$(NEWLIB_DIR)/newlib/libc/include
 
-all: include/nds/libversion.h release debug
+ARCHFLAGS = -mthumb \
+  			-mthumb-interwork \
+			-march=armv5te \
+			-mtune=arm946e-s
 
-#-------------------------------------------------------------------------------
-release: lib
-#-------------------------------------------------------------------------------
-	$(MAKE) -C arm9 BUILD=release || { exit 1;}
-	$(MAKE) -C arm7 BUILD=release || { exit 1;}
+CFLAGS =	-Wall -O2 \
+			-ffunction-sections \
+			-fdata-sections \
+			-fomit-frame-pointer \
+			-DARM9 \
+			-DNDEBUG \
+			$(ARCHFLAGS) \
+			$(INCLUDE_DIRS)
 
-#-------------------------------------------------------------------------------
-debug: lib
-#-------------------------------------------------------------------------------
-	$(MAKE) -C arm9 BUILD=debug || { exit 1;}
-	$(MAKE) -C arm7 BUILD=debug || { exit 1;}
+ASFLAGS =	-x assembler-with-cpp \
+			-DARM9 \
+			$(ARCHFLAGS) \
+			-I$(COMMON_SRC_DIR)
 
-#-------------------------------------------------------------------------------
-lib:
-#-------------------------------------------------------------------------------
-	mkdir lib
+ARFLAGS = -rcs
+BIN2SFLAGS = -a 4
+GRITFLAGS = -fts
 
-#-------------------------------------------------------------------------------
+
+# List all object files
+OBJ_FILES =  $(GFX_FILES:.grit=.o) \
+			 $(FONT_FILES:.bin=.o) \
+			 $(patsubst %.s,%.o, $(patsubst %.c,%.o, $(COMMON_SRC_FILES) $(ARM9_SRC_FILES)))
+
+
+# Build rules
+$(BIN_NAME): $(OBJ_FILES)
+	$(AR) $(ARFLAGS) $@ $^
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.arm.o: %.arm.c
+	$(CC) $(CFLAGS) -marm -c $< -o $@
+
+%.o: %.s
+	$(CC) $(ASFLAGS) -c $< -o $@
+
+%.s %.h: %.png %.grit
+	$(GRIT) $< $(GRITFLAGS) -o $*
+
+%.o: %.bin
+	$(BIN2S) $(BIN2SFLAGS) -H $(@:.o=.h) $< | \
+	$(AS) -o $@
+
+
+# General rules
+.PHONY: all clean rebuild
+
+all: $(BIN_NAME)
+
 clean:
-#-------------------------------------------------------------------------------
-	@$(MAKE) -C arm9 clean
-	@$(MAKE) -C arm7 clean
+	rm -rf $(OBJ_FILES) $(BIN_NAME)
 
-#-------------------------------------------------------------------------------
-dist-src:
-#-------------------------------------------------------------------------------
-	@tar --exclude=*CVS* --exclude=.svn -cjf libnds-src-$(VERSION).tar.bz2 arm7/Makefile arm9/Makefile source include icon.bmp Makefile libnds_license.txt Doxyfile
-
-#-------------------------------------------------------------------------------
-dist-bin: all
-#-------------------------------------------------------------------------------
-	@tar --exclude=*CVS* --exclude=.svn -cjf libnds-$(VERSION).tar.bz2 include lib icon.bmp libnds_license.txt
-
-dist: dist-bin dist-src
-
-#-------------------------------------------------------------------------------
-install: dist-bin
-#-------------------------------------------------------------------------------
-	mkdir -p $(DESTDIR)$(DEVKITPRO)/libnds
-	bzip2 -cd libnds-$(VERSION).tar.bz2 | tar -xf - -C $(DESTDIR)$(DEVKITPRO)/libnds
-
-#---------------------------------------------------------------------------------
-docs:
-#---------------------------------------------------------------------------------
-	doxygen Doxyfile
-	cat warn.log
-
-#---------------------------------------------------------------------------------
-include/nds/libversion.h : Makefile
-#---------------------------------------------------------------------------------
-	@echo "#ifndef __LIBNDSVERSION_H__" > $@
-	@echo "#define __LIBNDSVERSION_H__" >> $@
-	@echo >> $@
-	@echo "#define _LIBNDS_MAJOR_	$(LIBNDS_MAJOR)" >> $@
-	@echo "#define _LIBNDS_MINOR_	$(LIBNDS_MINOR)" >> $@
-	@echo "#define _LIBNDS_PATCH_	$(LIBNDS_PATCH)" >> $@
-	@echo >> $@
-	@echo '#define _LIBNDS_STRING "libNDS Release '$(LIBNDS_MAJOR).$(LIBNDS_MINOR).$(LIBNDS_PATCH)'"' >> $@
-	@echo >> $@
-	@echo "#endif // __LIBNDSVERSION_H__" >> $@
-
-
+rebuild: clean all

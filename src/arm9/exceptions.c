@@ -1,10 +1,7 @@
-  This version of libnds is altered by "thesoda.dev" and was originally
-  developed by devkitpro project. See license information below for more details.
-  
-  Copyright (C) 2005 - 2008
-   Michael Noland (joat)
-   Jason Rogers (dovoto)
-   Dave Murpy (WinterMute)
+/*---------------------------------------------------------------------------------
+
+  Copyright (C) 2005
+  	Dave Murphy (WinterMute)
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any
@@ -22,3 +19,16 @@
      must not be misrepresented as being the original software.
   3. This notice may not be removed or altered from any source
      distribution.
+
+---------------------------------------------------------------------------------*/
+
+#include "../ndstypes.h"
+#include "exceptions.h"
+
+//---------------------------------------------------------------------------------
+void setExceptionHandler(VoidFn handler) {
+//---------------------------------------------------------------------------------
+	EXCEPTION_VECTOR = enterException ;
+	*exceptionC = handler ;
+}
+

@@ -1,10 +1,9 @@
-  This version of libnds is altered by "thesoda.dev" and was originally
-  developed by devkitpro project. See license information below for more details.
-  
-  Copyright (C) 2005 - 2008
-   Michael Noland (joat)
-   Jason Rogers (dovoto)
-   Dave Murpy (WinterMute)
+/*---------------------------------------------------------------------------------
+
+	reset API
+
+  Copyright (C) 2010
+			Dave Murphy (WinterMute)
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any
@@ -22,3 +21,29 @@
      must not be misrepresented as being the original software.
   3. This notice may not be removed or altered from any source
      distribution.
+
+
+---------------------------------------------------------------------------------*/
+#include "ndstypes.h"
+#include "ipc.h"
+#include "system.h"
+
+#ifdef ARM7
+
+void resetARM9(u32 address) {
+	*((vu32*)0x02FFFE24) = address;
+
+#else
+
+void resetARM7(u32 address) {
+	*((vu32*)0x02FFFE34) = address;
+
+#endif
+
+	REG_IPC_FIFO_TX = 0x0c04000c;
+	while((REG_IPC_SYNC & 0x0f) != 1);
+	REG_IPC_SYNC = 0x100;
+	while((REG_IPC_SYNC & 0x0f) != 0);
+	REG_IPC_SYNC = 0;	
+}
+
