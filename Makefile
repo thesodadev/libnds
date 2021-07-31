@@ -25,7 +25,7 @@ LD = arm-none-eabi-gcc
 AS = arm-none-eabi-as
 AR = arm-none-eabi-gcc-ar
 BIN2S = $(NDSUTILS_DIR)/bin2s
-GRIT = $(NDSUTILS_DIR)/grit
+GRIT = $(GRIT_DIR)/grit
 
 
 # Build config
