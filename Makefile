@@ -24,9 +24,6 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 AS = arm-none-eabi-as
 AR = arm-none-eabi-gcc-ar
-BIN2S = $(NDSUTILS_DIR)/bin2s
-GRIT = $(GRIT_DIR)/grit
-
 
 # Build config
 INCLUDE_DIRS = 	-I$(GFX_DIR) \
@@ -77,10 +74,10 @@ $(BIN_NAME): $(OBJ_FILES)
 	$(CC) $(ASFLAGS) -c $< -o $@
 
 %.s %.h: %.png %.grit
-	$(GRIT) $< $(GRITFLAGS) -o $*
+	grit $< $(GRITFLAGS) -o $*
 
 %.o: %.bin
-	$(BIN2S) $(BIN2SFLAGS) -H $(@:.o=.h) $< | \
+	bin2s $(BIN2SFLAGS) -H $(@:.o=.h) $< | \
 	$(AS) -o $@
 
 
