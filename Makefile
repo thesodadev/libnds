@@ -26,9 +26,11 @@ AS = arm-none-eabi-as
 AR = arm-none-eabi-gcc-ar
 
 # Build config
-INCLUDE_DIRS = 	-I$(GFX_DIR) \
+INCLUDE_FLAGS = -I$(GFX_DIR) \
 				-I$(FONTS_DIR) \
-				-I$(NEWLIB_DIR)/newlib/libc/include
+				-Iinclude \
+				-Iinclude/arm9 \
+				-Iinclude/arm9/dldi
 
 ARCHFLAGS = -mthumb \
   			-mthumb-interwork \
@@ -42,12 +44,12 @@ CFLAGS =	-Wall -O2 \
 			-DARM9 \
 			-DNDEBUG \
 			$(ARCHFLAGS) \
-			$(INCLUDE_DIRS)
+			$(INCLUDE_FLAGS)
 
 ASFLAGS =	-x assembler-with-cpp \
 			-DARM9 \
 			$(ARCHFLAGS) \
-			-I$(COMMON_SRC_DIR)
+			$(INCLUDE_FLAGS)
 
 ARFLAGS = -rcs
 BIN2SFLAGS = -a 4
@@ -90,3 +92,12 @@ clean:
 	rm -rf $(OBJ_FILES) $(BIN_NAME)
 
 rebuild: clean all
+
+PREFIX ?= /usr/lib
+
+install: $(INCLUDE_PATHES)
+	install -d $(DESTDIR)$(PREFIX)/arm-none-eabi/include/nds
+	cp -fr include/* $(DESTDIR)$(PREFIX)/arm-none-eabi/include/nds
+	chmod -R 644 $(DESTDIR)$(PREFIX)/arm-none-eabi/include/nds
+	install -d $(DESTDIR)$(PREFIX)/arm-none-eabi/lib
+	install -m 644 $(BIN_NAME) $(DESTDIR)$(PREFIX)/arm-none-eabi/lib
