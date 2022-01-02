@@ -1,23 +1,4 @@
-# Output file name
-BIN_NAME = libnds.a
-
-# Dirs with resources and source code
-GFX_DIR = res/gfx
-FONTS_DIR = res/fonts
-COMMON_SRC_DIR = src
-ARM9_SRC_DIR = src/arm9
-
-# Find all .c and .s files
-COMMON_SRC_FILES = $(wildcard $(COMMON_SRC_DIR)/*.c) $(wildcard $(COMMON_SRC_DIR)/*.s)
-
-ARM9_SRC_FILES = $(wildcard $(ARM9_SRC_DIR)/*.c) $(wildcard $(ARM9_SRC_DIR)/*.s) \
-				 $(wildcard $(ARM9_SRC_DIR)/system/*.c) $(wildcard $(ARM9_SRC_DIR)/system/*.s) \
-				 $(wildcard $(ARM9_SRC_DIR)/dldi/*.c) $(wildcard $(ARM9_SRC_DIR)/dldi/*.s)
-
-# And all resources
-GFX_FILES = $(wildcard $(GFX_DIR)/*.grit)
-FONT_FILES = $(wildcard $(FONTS_DIR)/*.bin)
-
+TARGET ?= ARM9
 
 # Toolchain
 CC = arm-none-eabi-gcc
@@ -25,42 +6,68 @@ LD = arm-none-eabi-gcc
 AS = arm-none-eabi-as
 AR = arm-none-eabi-gcc-ar
 
-# Build config
-INCLUDE_FLAGS = -I$(GFX_DIR) \
-				-I$(FONTS_DIR) \
-				-Iinclude \
-				-Iinclude/arm9 \
-				-Iinclude/arm9/dldi
-
 ARCHFLAGS = -mthumb \
-  			-mthumb-interwork \
-			-march=armv5te \
-			-mtune=arm946e-s
-
-CFLAGS =	-Wall -O2 \
-			-ffunction-sections \
-			-fdata-sections \
-			-fomit-frame-pointer \
-			-DARM9 \
-			-DNDEBUG \
-			$(ARCHFLAGS) \
-			$(INCLUDE_FLAGS)
-
-ASFLAGS =	-x assembler-with-cpp \
-			-DARM9 \
-			$(ARCHFLAGS) \
-			$(INCLUDE_FLAGS)
-
+  			-mthumb-interwork
 ARFLAGS = -rcs
 BIN2SFLAGS = -a 4
 GRITFLAGS = -fts
 
+COMMON_SRC_DIR = src
+COMMON_SRC_FILES = $(wildcard $(COMMON_SRC_DIR)/*.c) $(wildcard $(COMMON_SRC_DIR)/*.s)
 
-# List all object files
-OBJ_FILES =  $(GFX_FILES:.grit=.o) \
-			 $(FONT_FILES:.bin=.o) \
-			 $(patsubst %.s,%.o, $(patsubst %.c,%.o, $(COMMON_SRC_FILES) $(ARM9_SRC_FILES)))
+ifeq ($(TARGET),ARM9)
+	BIN_NAME = libnds9.a
 
+	GFX_DIR = res/gfx
+	FONTS_DIR = res/fonts
+	ARM9_SRC_DIR = src/arm9
+
+	SRC_FILES = $(wildcard $(ARM9_SRC_DIR)/*.c) $(wildcard $(ARM9_SRC_DIR)/*.s) \
+				$(wildcard $(ARM9_SRC_DIR)/system/*.c) $(wildcard $(ARM9_SRC_DIR)/system/*.s) \
+				$(wildcard $(ARM9_SRC_DIR)/dldi/*.c) $(wildcard $(ARM9_SRC_DIR)/dldi/*.s)
+
+	OBJ_FILES = $(GFX_FILES:.grit=.o) \
+				$(FONT_FILES:.bin=.o)
+
+	GFX_FILES = $(wildcard $(GFX_DIR)/*.grit)
+	FONT_FILES = $(wildcard $(FONTS_DIR)/*.bin)
+
+	INCLUDE_FLAGS = -I$(GFX_DIR) \
+					-I$(FONTS_DIR) \
+					-Iinclude \
+					-Iinclude/arm9 \
+					-Iinclude/arm9/dldi
+
+	ARCHFLAGS += -march=armv5te \
+				 -mtune=arm946e-s \
+				 -DARM9
+else
+	BIN_NAME = libnds7.a
+
+	ARM7_SRC_DIR = src/arm7
+	SRC_FILES = $(wildcard $(ARM7_SRC_DIR)/*.c) $(wildcard $(ARM7_SRC_DIR)/*.s)
+
+	INCLUDE_FLAGS = -Iinclude \
+					-Iinclude/arm7
+
+	ARCHFLAGS += -mcpu=arm7tdmi \
+				 -mtune=arm7tdmi \
+				 -DARM7
+endif
+
+OBJ_FILES += $(patsubst %.s,%.o, $(patsubst %.c,%.o, $(COMMON_SRC_FILES) $(SRC_FILES)))
+
+CFLAGS = -Wall -O2 \
+		 -ffunction-sections \
+		 -fdata-sections \
+		 -fomit-frame-pointer \
+		 -DNDEBUG \
+		 $(ARCHFLAGS) \
+		 $(INCLUDE_FLAGS)
+
+ASFLAGS = -x assembler-with-cpp \
+		  $(ARCHFLAGS) \
+		  $(INCLUDE_FLAGS)
 
 # Build rules
 $(BIN_NAME): $(OBJ_FILES)

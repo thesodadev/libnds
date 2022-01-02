@@ -30,13 +30,13 @@ distribution.
 #include <string.h>
 #include <stdio.h>
 
-#include "../ndstypes.h"
-#include "../interrupts.h"
+#include "ndstypes.h"
+#include "interrupts.h"
 
-#include "keyboard.h"
-#include "input.h"
-#include "decompress.h"
-#include "background.h"
+#include "arm9/keyboard.h"
+#include "arm9/input.h"
+#include "arm9/decompress.h"
+#include "arm9/background.h"
 #include "keyboardGfx.h"
 
 

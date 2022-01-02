@@ -1,5 +1,10 @@
 /*---------------------------------------------------------------------------------
 
+	I2C control for the ARM7
+
+	Copyright (C) 2011
+		Dave Murphy (WinterMute)
+
 	This software is provided 'as-is', without any express or implied
 	warranty.  In no event will the authors be held liable for any
 	damages arising from the use of this software.
@@ -18,48 +23,43 @@
 		distribution.
 
 ---------------------------------------------------------------------------------*/
+#ifndef I2C_ARM7_INCLUDE
+#define I2C_ARM7_INCLUDE
 
-/*! \file guitarGrip.h
-   \brief guitar grip device slot-2 addon support.
-*/
-#ifndef GUITARGRIP_HEADER_INCLUDE
-#define GUITARGRIP_HEADER_INCLUDE
-
-#ifdef __cplusplus
-extern "C" {
+#ifndef ARM7
+#error i2c header is for ARM7 only
 #endif
 
-#define GUITARGRIP_GREEN BIT(6)
-#define GUITARGRIP_RED BIT(5)
-#define GUITARGRIP_YELLOW BIT(4)
-#define GUITARGRIP_BLUE BIT(3)
+#include "../ndstypes.h"
 
+#define REG_I2CDATA	(*(vu8 *)0x4004500)
+#define REG_I2CCNT	(*(vu8 *)0x4004501)
 
-/*! \fn bool guitarGripIsInserted()
-    \brief Check for the guitar grip
-    \return true if that's what is in the slot-2
-*/
-bool guitarGripIsInserted();
-
-/*! \fn void guitarGripScanKeys()
-    \brief Obtain the current guitar grip state.
-    Call this function once per main loop to use the guitarGrip functions.
-*/
-void guitarGripScanKeys();
-
-//! Obtains the current guitar grip keys held state
-u8 guitarGripKeysHeld();
-
-//! Obtains the current guitar grip keys pressed state
-u16 guitarGripKeysDown();
-
-//! Obtains the current guitar grip keys released state
-u16 guitarGripKeysUp();
-
-
-#ifdef __cplusplus
+static inline void i2cWaitBusy() {
+	while(REG_I2CCNT & 0x80);
 }
-#endif
 
-#endif
+enum i2cDevices {
+	I2C_CAM0	= 0x7A,
+	I2C_CAM1	= 0x78,
+	I2C_UNK1	= 0xA0,
+	I2C_UNK2	= 0xE0,
+	I2C_PM		= 0x4A,
+	I2C_UNK3	= 0x40,
+	I2C_GPIO	= 0x90
+};
 
+// Registers for Power Management (I2C_PM)
+#define I2CREGPM_BATUNK		0x00
+#define I2CREGPM_PWRIF		0x10
+#define I2CREGPM_PWRCNT		0x11
+#define I2CREGPM_MMCPWR		0x12
+#define I2CREGPM_BATTERY	0x20
+#define I2CREGPM_CAMLED		0x31
+#define I2CREGPM_VOL		0x40
+#define I2CREGPM_RESETFLAG	0x70
+
+u8 i2cWriteRegister(u8 device, u8 reg, u8 data);
+u8 i2cReadRegister(u8 device, u8 reg);
+
+#endif // I2C_ARM7_INCLUDE

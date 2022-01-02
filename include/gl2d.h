@@ -21,7 +21,7 @@
 */
 
 
-#include "../src/arm9/videoGL.h"
+#include "arm9/videoGL.h"
 
 #ifndef GL2D__H
 #define GL2D__H

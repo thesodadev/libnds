@@ -1,5 +1,12 @@
 /*---------------------------------------------------------------------------------
 
+	Microphone control for the ARM7
+
+	Copyright (C) 2005
+		Michael Noland (joat)
+		Jason Rogers (dovoto)
+		Dave Murphy (WinterMute)
+
 	This software is provided 'as-is', without any express or implied
 	warranty.  In no event will the authors be held liable for any
 	damages arising from the use of this software.
@@ -18,37 +25,50 @@
 		distribution.
 
 ---------------------------------------------------------------------------------*/
+#ifndef ARM7_TOUCH_INCLUDE
+#define ARM7_TOUCH_INCLUDE
+//---------------------------------------------------------------------------------
 
-/*! \file paddle.h
-   \brief paddle device slot-2 addon support.
-*/
-#ifndef PADDLE_HEADER_INCLUDE
-#define PADDLE_HEADER_INCLUDE
+
+#ifndef ARM7
+#error Touch screen is only available on the ARM7
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "serial.h"
+#include "../touch.h"
 
-/*! \fn bool paddleIsInserted()
-    \brief Check for the paddle
-    \return true if that's what is in the slot-2
-*/
-bool paddleIsInserted();
+#define SCREEN_WIDTH	256
+#define SCREEN_HEIGHT	192
 
-/*! \fn void paddleRead()
-    \brief Obtain the current paddle state
-    \return a u16 containing a 12bit number (fixed point fraction), incrementing for clockwise rotations and decrementing for counterclockwise
-*/
-u16 paddleRead();
 
-//! Resets the paddle device. May change the current value to 0xFFF, 0x000, or 0x001. May perform other unknown internal reset operations. Normally not needed.
-void paddleReset();
+#define TSC_MEASURE_TEMP1    0x84
+#define TSC_MEASURE_Y        0x90
+#define TSC_MEASURE_BATTERY  0xA4
+#define TSC_MEASURE_Z1       0xB4
+#define TSC_MEASURE_Z2       0xC4
+#define TSC_MEASURE_X        0xD0
+#define TSC_MEASURE_AUX      0xE4
+#define TSC_MEASURE_TEMP2    0xF4
 
+
+
+
+void touchInit();
+void touchReadXY(touchPosition *touchPos);
+uint16 touchRead(uint32 command);
+uint32 touchReadTemperature(int * t1, int * t2);
+bool touchPenDown();
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+
+//---------------------------------------------------------------------------------
+#endif	// ARM7_TOUCH_INCLUDE
+//---------------------------------------------------------------------------------
 
