@@ -127,6 +127,7 @@ extern "C" {
 #include "input.h"
 #include "sha1.h"
 
+#ifdef ARM9
 #include "arm9/dynamicArray.h"
 #include "arm9/linkedlist.h"
 #include "arm9/background.h"
@@ -152,6 +153,20 @@ extern "C" {
 #include "arm9/video.h"
 #include "arm9/videoGL.h"
 #include "arm9/dldi/nand.h"
+#endif // #ifdef ARM9
+
+#ifdef ARM7
+#include "arm7/aes.h"
+#include "arm7/audio.h"
+#include "arm7/clock.h"
+#include "arm7/codec.h"
+#include "arm7/input.h"
+#include "arm7/i2c.h"
+#include "arm7/sdmmc.h"
+#include "arm7/serial.h"
+#include "arm7/touch.h"
+#endif // #ifdef ARM7
+
 
 #ifdef __cplusplus
 }

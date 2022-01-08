@@ -1,3 +1,7 @@
+# There potential problem with common source files 
+# they need to be build for each platform independetly
+# as a workaround use `make clean` before each build
+
 TARGET ?= ARM9
 
 # Toolchain
