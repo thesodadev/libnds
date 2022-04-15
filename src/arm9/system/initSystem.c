@@ -2,7 +2,7 @@
 
 initSystem.c -- Code for initialising the DS
 
-Copyright (C) 2007 - 2010
+Copyright (C) 2007 - 2021
 	Dave Murphy (WinterMute)
 
 This software is provided 'as-is', without any express or implied
@@ -25,30 +25,51 @@ must not be misrepresented as being the original software.
 distribution.
 
 ---------------------------------------------------------------------------------*/
-
+#include <nds/ndstypes.h>
+#include <nds/memory.h>
+#include <nds/timers.h>
+#include <nds/dma.h>
+#include <nds/ipc.h>
+#include <nds/arm9/video.h>
+#include <nds/arm9/sprite.h>
+#include <nds/arm9/input.h>
+#include <nds/system.h>
+#include <nds/interrupts.h>
+#include <nds/fifocommon.h>
 #include <time.h>
+#include <libnds_internal.h>
+
 #include <sys/iosupport.h>
 #include <sys/time.h>
 
-#include "../../ndstypes.h"
-#include "../../memory.h"
-#include "../../timers.h"
-#include "../../dma.h"
-#include "../../ipc.h"
-#include "../../system.h"
-#include "../../interrupts.h"
-#include "../../fifocommon.h"
-#include "../../libnds_internal.h"
-
-#include "../video.h"
-#include "../sprite.h"
-#include "../input.h"
-
 void __libnds_exit(int rc);
 bool __dsimode; // set in crt0
-extern time_t *punixTime;
 
-int __libnds_gtod(struct _reent *ptr, struct timeval *tp, struct timezone *tz);
+time_t *punixTime;
+
+//---------------------------------------------------------------------------------
+int __SYSCALL(gettod_r)(struct _reent *ptr, struct timeval *tp, struct timezone *tz) {
+//---------------------------------------------------------------------------------
+
+        if (tp != NULL) {
+                tp->tv_sec = *punixTime;
+                tp->tv_usec = 0;
+        }
+        if (tz != NULL) {
+                tz->tz_minuteswest = 0;
+                tz->tz_dsttime = 0;
+        }
+
+        return 0;
+}
+
+
+//---------------------------------------------------------------------------------
+void __SYSCALL(exit)(int rc) {
+//---------------------------------------------------------------------------------
+	__libnds_exit(rc);
+}
+
 
 //---------------------------------------------------------------------------------
 // Reset the DS registers to sensible defaults
@@ -94,9 +115,6 @@ void __attribute__((weak)) initSystem(void) {
 	__transferRegion()->buttons = 0xffff;
 
 	punixTime = (time_t*)memUncached((void *)&__transferRegion()->unixTime);
-
-	__syscalls.exit = __libnds_exit;
-	__syscalls.gettod_r = __libnds_gtod;
 
 	extern  char *fake_heap_end;
 	__transferRegion()->bootcode = (struct __bootstub *)fake_heap_end;
