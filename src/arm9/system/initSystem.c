@@ -25,17 +25,17 @@ must not be misrepresented as being the original software.
 distribution.
 
 ---------------------------------------------------------------------------------*/
-#include <nds/ndstypes.h>
-#include <nds/memory.h>
-#include <nds/timers.h>
-#include <nds/dma.h>
-#include <nds/ipc.h>
-#include <nds/arm9/video.h>
-#include <nds/arm9/sprite.h>
-#include <nds/arm9/input.h>
-#include <nds/system.h>
-#include <nds/interrupts.h>
-#include <nds/fifocommon.h>
+#include <ndstypes.h>
+#include <memory.h>
+#include <timers.h>
+#include <dma.h>
+#include <ipc.h>
+#include <arm9/video.h>
+#include <arm9/sprite.h>
+#include <arm9/input.h>
+#include <system.h>
+#include <interrupts.h>
+#include <fifocommon.h>
 #include <time.h>
 #include <libnds_internal.h>
 
